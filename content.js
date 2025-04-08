@@ -12,7 +12,6 @@
       console.log("No meal data found on this page");
       return;
     }
-    console.log("there is meal data");
 
     // Extract the date from the first row
     const dateRow = document.querySelector("#cuerpo_resumen tr");
@@ -20,8 +19,10 @@
 
     const dateText = dateRow.textContent.trim();
     console.log("dateText", dateText);
-    
-    const dateMatch = dateText.match(/([A-Za-z]+), *(\d+) *([A-Za-z]+) *(\d{4})/);
+
+    const dateMatch = dateText.match(
+      /([A-Za-z]+), *(\d+) *([A-Za-z]+) *(\d{4})/
+    );
     if (!dateMatch) return;
 
     console.log("date-matched", dateMatch);
@@ -63,6 +64,8 @@
       if (row.querySelector('td[colspan="2"][onclick*="toggle"]')) {
         const option = row.querySelector('td[colspan="2"]').textContent.trim();
 
+        console.log(option)
+
         // Fixed: Properly extract the details ID from the onclick attribute
         const onclickAttr = row
           .querySelector('td[colspan="2"]')
@@ -76,6 +79,7 @@
           if (detailsElement) {
             // Extract each person and their diet info
             const peopleText = detailsElement.innerHTML;
+
             const people = peopleText.split("<br>");
 
             people.forEach((person) => {
@@ -86,10 +90,11 @@
                 const diet = match[2] || "";
 
                 // Categorize this as accepted or declined based on option
-                const status = option.toLowerCase().includes("no")
+                const status = option.toLowerCase().includes("no") && !option.toLowerCase().includes("normal")
                   ? "declined"
                   : "accepted";
-                const mealOption = option.replace(/NO/i, "").trim();
+
+                const mealOption = !option.toLowerCase().includes("normal") ? option.replace(/NO/i, "").trim() :  option;
 
                 // Initialize person data if needed
                 if (!mealData.meals[name]) {
@@ -104,6 +109,8 @@
                 };
               }
             });
+
+            console.log(mealData);
           }
         }
       }
