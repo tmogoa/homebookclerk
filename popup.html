@@ -1,0 +1,112 @@
+<!-- popup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Meal Booking Analyzer</title>
+  <style>
+    body {
+      width: 500px;
+      font-family: Arial, sans-serif;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    h2 {
+      font-size: 16px;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .filter-controls {
+      margin-bottom: 15px;
+    }
+    .stats {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    button {
+      padding: 8px 12px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #357ae8;
+    }
+    .export-btn {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Meal Booking Analyzer</h1>
+  
+  <div class="filter-controls">
+    <label for="person-filter">Person:</label>
+    <select id="person-filter">
+      <option value="all">All People</option>
+      <!-- Will be populated dynamically -->
+    </select>
+    
+    <label for="date-range">Date Range:</label>
+    <select id="date-range">
+      <option value="all">All Dates</option>
+      <option value="current-month">Current Month</option>
+      <option value="custom">Custom Range</option>
+    </select>
+    
+    <div id="custom-range" style="display: none; margin-top: 10px;">
+      <label for="start-date">Start:</label>
+      <input type="date" id="start-date">
+      
+      <label for="end-date">End:</label>
+      <input type="date" id="end-date">
+    </div>
+    
+    <button id="apply-filters">Apply Filters</button>
+    <button id="clear-filters">Clear Filters</button>
+  </div>
+  
+  <h2>Summary</h2>
+  <div id="summary-stats"></div>
+  
+  <h2>Details</h2>
+  <table id="details-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Person</th>
+        <th>Breakfast</th>
+        <th>Lunch</th>
+        <th>Dinner</th>
+        <th>Diet</th>
+      </tr>
+    </thead>
+    <tbody id="details-body">
+      <!-- Will be populated dynamically -->
+    </tbody>
+  </table>
+  
+  <button id="export-csv" class="export-btn">Export to CSV</button>
+  <button id="clear-data" class="export-btn">Clear All Data</button>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
