@@ -7,6 +7,7 @@
 
   // Main function to extract meal data
   function extractMealData() {
+    
     // Check if we're on a page with meal data
     if (!document.getElementById("cuerpo_resumen")) {
       console.log("No meal data found on this page");
@@ -15,15 +16,24 @@
 
     // Extract the date from the first row
     const dateRow = document.querySelector("#cuerpo_resumen tr");
-    if (!dateRow) return;
+    console.log(dateRow)
+    if (!dateRow)
+      {
+        console.error("no date row")
+        return;
+      } 
+        
 
     const dateText = dateRow.textContent.trim();
-    console.log("dateText", dateText);
 
     const dateMatch = dateText.match(
       /([A-Za-z]+), *(\d+) *([A-Za-z]+) *(\d{4})/
     );
-    if (!dateMatch) return;
+    if (!dateMatch) {
+      console.log(dateText)
+      console.error('Date not matched')
+      return
+    };
 
     console.log("date-matched", dateMatch);
 
@@ -34,6 +44,8 @@
       date: date,
       meals: {},
     };
+
+    const mealOptions = {};
 
     // Current meal type being processed
     let currentMeal = "";
@@ -64,8 +76,6 @@
       if (row.querySelector('td[colspan="2"][onclick*="toggle"]')) {
         const option = row.querySelector('td[colspan="2"]').textContent.trim();
 
-        console.log(option)
-
         // Fixed: Properly extract the details ID from the onclick attribute
         const onclickAttr = row
           .querySelector('td[colspan="2"]')
@@ -90,11 +100,15 @@
                 const diet = match[2] || "";
 
                 // Categorize this as accepted or declined based on option
-                const status = option.toLowerCase().includes("no") && !option.toLowerCase().includes("normal")
-                  ? "declined"
-                  : "accepted";
+                const status =
+                  option.toLowerCase().includes("no") &&
+                  !option.toLowerCase().includes("normal")
+                    ? "declined"
+                    : "accepted";
 
-                const mealOption = !option.toLowerCase().includes("normal") ? option.replace(/NO/i, "").trim() :  option;
+                const mealOption = !option.toLowerCase().includes("normal")
+                  ? option.replace(/NO/i, "").trim()
+                  : option;
 
                 // Initialize person data if needed
                 if (!mealData.meals[name]) {
@@ -102,28 +116,36 @@
                 }
 
                 // Store the meal choice for this person
-                mealData.meals[name][currentMeal] = {
+                mealData.meals[name][`${currentMeal}-${option}`] = {
                   status: status,
                   option: mealOption,
                   diet: diet,
                 };
+
+                if (option !== "NO") {
+                  mealOptions[`${currentMeal}-${option}`] = true;
+                }
               }
             });
 
-            console.log(mealData);
+            // console.log(mealData);
           }
         }
       }
     }
 
     // Save the extracted data
-    saveMealData(date, mealData);
+    saveMealData(date, mealData, Object.keys(mealOptions));
+
+    console.log(mealOptions);
 
     // If we're in navigation mode, continue to the next date
     if (isNavigating && currentDateIndex < datesToProcess.length - 1) {
       currentDateIndex++;
       setTimeout(navigateToDate, 1000);
+      console.log("continue nav")
     } else if (isNavigating) {
+      console.log("finished nav")
       // We've finished processing all dates
       isNavigating = false;
       currentDateIndex = 0;
@@ -134,10 +156,19 @@
   }
 
   // Function to save the extracted data to extension storage
-  function saveMealData(date, data) {
-    chrome.storage.local.get(["mealData"], (result) => {
+  function saveMealData(date, data, mealOptions) {
+    chrome.storage.local.get(["mealData", "mealOptions"], (result) => {
       const allData = result.mealData || {};
+      const allOptions = result.mealOptions || [];
       allData[date] = data;
+
+      mealOptions.forEach(option => {
+        if(allOptions.indexOf(option) === -1){
+          allOptions.push(option)
+        }
+      });
+
+      chrome.storage.local.set({mealOptions: allOptions}, () => {})
 
       chrome.storage.local.set({ mealData: allData }, () => {
         console.log(`Data saved for ${date}`);
@@ -170,10 +201,13 @@
     // This will need to be adapted to match your specific booking system's date navigation
 
     // Look for date input fields
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    if (dateInputs.length > 0) {
+    
+    const dateInput = document.getElementById('mi_dia');
+
+
+    if (dateInput) {
+      console.log("found datepicker")
       // Assume the first date input is the one we want
-      const dateInput = dateInputs[0];
 
       // Format the date as YYYY-MM-DD for the input
       const [day, month, year] = date.split(" ");
@@ -187,26 +221,28 @@
       dateInput.dispatchEvent(new Event("input", { bubbles: true }));
       dateInput.dispatchEvent(new Event("change", { bubbles: true }));
 
-      // Look for a submit or search button
-      const buttons = Array.from(
-        document.querySelectorAll('button, input[type="submit"]')
-      );
-      const searchButton = buttons.find(
-        (button) =>
-          button.textContent.toLowerCase().includes("search") ||
-          button.textContent.toLowerCase().includes("go") ||
-          button.value?.toLowerCase().includes("search")
-      );
+      setTimeout(extractMealData, 1000)
 
-      if (searchButton) {
-        searchButton.click();
-      } else {
-        // If no button found, try to submit the form
-        const form = dateInput.closest("form");
-        if (form) {
-          form.submit();
-        }
-      }
+      // Look for a submit or search button
+      // const buttons = Array.from(
+      //   document.querySelectorAll('button, input[type="submit"]')
+      // );
+      // const searchButton = buttons.find(
+      //   (button) =>
+      //     button.textContent.toLowerCase().includes("search") ||
+      //     button.textContent.toLowerCase().includes("go") ||
+      //     button.value?.toLowerCase().includes("search")
+      // );
+
+      // if (searchButton) {
+      //   searchButton.click();
+      // } else {
+      //   // If no button found, try to submit the form
+      //   const form = dateInput.closest("form");
+      //   if (form) {
+      //     form.submit();
+      //   }
+      // }
     } else {
       // If no date input found, look for next/previous day buttons and calendar widgets
       // This is a more complex approach and would need customization for your specific system
@@ -217,6 +253,8 @@
       );
       isNavigating = false;
     }
+
+    console.log('terminates')
   }
 
   // Helper function to get month number from name
@@ -277,6 +315,7 @@
 
     // Start the navigation process
     navigateToDate();
+    
   }
 
   // UI for navigation status
@@ -391,7 +430,7 @@
   window.addEventListener("load", () => {
     // Wait a bit for any AJAX content to load
     setTimeout(() => {
-      extractMealData();
+      // extractMealData();
       createControlPanel();
     }, 1000);
   });
